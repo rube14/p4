@@ -55,13 +55,28 @@
                             }
     },
     {
-        "id":"star_dir","required":"no","default":"."
+        "id":"star_dir",
+        "required":"no",
+        "default":"."
     },
     {
         "id":"star_out",
         "required":"no",
         "subst_constructor":{
                                 "vals":[ {"subst":"star_dir"}, "/", "_", {"subst":"rpt"}, "_" ],
+                                "postproc":{"op":"concat","pad":""}
+                            }
+    },
+    {
+        "id":"salmon_dir",
+        "required":"no",
+        "default":"salmon_quant"
+    },
+    {
+        "id":"salmon_out",
+        "required":"no",
+        "subst_constructor":{
+                                "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"} ],
                                 "postproc":{"op":"concat","pad":""}
                             }
     },
@@ -180,6 +195,23 @@
                             }
     },
     {
+        "id":"salmon_quant",
+        "required":"no",
+        "subst_constructor":{
+                                "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"}, "/quant.sf" ],
+                                "postproc":{"op":"concat","pad":""}
+                            },
+        "default":"salmon_quant/quant.sf"
+    },
+    {
+        "id":"cp_salmon_quant_target",
+        "required":"no",
+        "subst_constructor":{
+                                "vals":[ {"subst":"outdatadir"}, "/", {"subst":"rpt"}, ".transcripts.quant" ],
+                                "postproc":{"op":"concat","pad":""}
+                            }
+    },
+    {
         "id":"star_executable",
         "required":"no",
         "default":"STAR"
@@ -284,7 +316,7 @@
                 "-I", "bam",
                 "-O", "cram",
                 {"subst":"scramble_transcriptome_reference_flag"},
-                "__SRC_TOTRANSCRIPTOME_BAM_IN__",
+                "__CRAM_TOTRANSCRIPTOMEBAM_OUT__",
                 {"subst":"scramble_totranscriptome_bam_target"}
         ]
     },
@@ -301,6 +333,57 @@
         "use_STDIN": false,
         "use_STDOUT": false,
         "cmd":[ "cp", "__SRC_READSPERGENE_TAB_IN__", {"subst":"cp_readspergene_tab_target"} ]
+    },
+    {
+        "id":"tee_totranscriptome_bam",
+        "type":"EXEC",
+        "use_STDIN": true,
+        "use_STDOUT": false,
+        "cmd":[
+                "teepot",
+                {"subst":"teepot_vflag", "ifnull":"-v"},
+                {"subst":"teepot_tempdir_flag"},
+                "-w", "300",
+                "-m", {"subst":"startotrans_teepot_mval", "ifnull":"100M"},
+                "__BAMSORT_TOTRANSCRIPTOMEBAM_OUT__",
+                "__CRAM_TOTRANSCRIPTOMEBAM_OUT__"
+        ],
+        "comment":"get deadlock when tee used here; specify parameter value teepot_tempdir_value to specify teepot tempdir"
+    },
+    {
+        "id":"bamsort_hash",
+        "type":"EXEC",
+        "use_STDIN": true,
+        "use_STDOUT": true,
+        "cmd":["bamsort", {"subst":"bsmd_threads"},"SO=hash", "level=0"]
+    },
+    {
+        "id":"salmon",
+        "type":"EXEC",
+        "use_STDIN": false,
+        "use_STDOUT": false,
+        "cmd":[
+                "salmon",
+                "quant",
+                "--target", {"subst":"scramble_transcriptome_reference_flag"},
+                "--alignments", "__BAMSORT_HASH_BAM_IN__",
+                "--output", {"subst":"salmon_out"},
+                "--libType", "A",
+                {"subst":"b2c_mt", "ifnull":{"subst_constructor":{ "vals":[ "--numThreads", {"subst":"b2c_mt_val"} ]}}}
+        ]
+    },
+    {
+        "id":"salmon_quant",
+        "type":"RAFILE",
+        "subtype":"DUMMY",
+        "name":{"subst":"salmon_quant"}
+    },
+    {
+        "id":"cp_salmon_quant",
+        "type":"EXEC",
+        "use_STDIN": false,
+        "use_STDOUT": false,
+        "cmd":[ "cp", "__SRC_SALMON_QUANT_IN__", {"subst":"cp_salmon_quant_target"} ]
     }
 ],
 "edges":[
@@ -310,12 +393,15 @@
     { "id":"fq2_to_star", "from":"fq2", "to":"star:__FQ2_IN__" },
     { "id":"star_to_readspergene_tab", "from":"star", "to":"readspergene_tab" },
     { "id":"star_to_chimeric_sam", "from":"star", "to":"chimeric_sam" },
-    { "id":"scramble_chimeric_sam", "from":"chimeric_sam", "to":"scramble_chimeric_sam:__SRC_CHIMERIC_SAM_IN__"},
-    { "id":"star_to_totranscriptome_bam", "from":"star", "to":"totranscriptome_bam" },
-    { "id":"scramble_totranscriptome_bam", "from":"totranscriptome_bam", "to":"scramble_totranscriptome_bam:__SRC_TOTRANSCRIPTOME_BAM_IN__" },
     { "id":"star_to_junctions_tab", "from":"star", "to":"junctions_tab" },
-    { "id":"cp_junctions_tab", "from":"junctions_tab", "to":"cp_junctions_tab:__SRC_JUNCTIONS_TAB_IN__" },
-    { "id":"star_to_readspergene_tab", "from":"star", "to":"readspergene_tab" },
-    { "id":"cp_readspergene_tab", "from":"readspergene_tab", "to":"cp_readspergene_tab:__SRC_READSPERGENE_TAB_IN__" }
+    { "id":"junctions_tab_to_cp_junctions_tab", "from":"junctions_tab", "to":"cp_junctions_tab:__SRC_JUNCTIONS_TAB_IN__" },
+    { "id":"readspergene_tab_to_cp_readspergene_tab", "from":"readspergene_tab", "to":"cp_readspergene_tab:__SRC_READSPERGENE_TAB_IN__" },
+    { "id":"chimeric_sam_to_scramble_chimeric_sam", "from":"chimeric_sam", "to":"scramble_chimeric_sam:__SRC_CHIMERIC_SAM_IN__"},
+    { "id":"star_to_tee_totranscriptome_bam", "from":"star", "to":"tee_totranscriptome_bam"},
+    { "id":"tee_totranscriptome_bam_to_bamsort_hash", "from":"tee_totranscriptome_bam:__BAMSORT_HASH_BAM_OUT__", "to":"bamsort_hash" },
+    { "id":"tee_totranscriptome_bam_to_scramble_totranscriptome_bam", "from":"tee_totranscriptome_bam:__CRAM_TOTRANSCRIPTOMEBAM_OUT__", "to":"scramble_totranscriptome_bam" },
+    { "id":"bamsort_hash_to_salmon", "from":"bamsort_hash", "to":"salmon:__BAMSORT_HASH_BAM_IN__" },
+    { "id":"salmon_to_salmon_quant", "from":"salmon", "to":"salmon_quant"},
+    { "id":"salmon_quant_to_cp_salmon_quant", "from":"salmon_quant", "to":"cp_salmon_quant:__SRC_SALMON_QUANT_IN__"}
 ]
 }
