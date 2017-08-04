@@ -346,11 +346,12 @@
         "use_STDOUT": false,
         "cmd":[
                 "salmon",
+                "--no-version-check",
                 "quant",
                 "--index", {"subst":"transcriptome_val"},
                 "--libType", "A",
-                "--mates1", "_FQ1_IN_",
-                "--mates2", "_FQ2_IN_",
+                "--mates1", "__FQ1_IN__",
+                "--mates2", "__FQ2_IN__",
                 {"subst":"b2c_mt", "ifnull":{"subst_constructor":{ "vals":[ "-p", {"subst":"b2c_mt_val"} ]}}},
                 "--output", {"subst":"salmon_out"}
         ]
@@ -383,8 +384,8 @@
     { "id":"cp_junctions_tab", "from":"junctions_tab", "to":"cp_junctions_tab:__SRC_JUNCTIONS_TAB_IN__" },
     { "id":"star_to_readspergene_tab", "from":"star", "to":"readspergene_tab" },
     { "id":"cp_readspergene_tab", "from":"readspergene_tab", "to":"cp_readspergene_tab:__SRC_READSPERGENE_TAB_IN__" },
-    { "id":"fq1_to_salmon", "from":"fq1", "to":"salmon:_FQ1_IN_" },
-    { "id":"fq2_to_salmon", "from":"fq2", "to":"salmon:_FQ2_IN_" },
+    { "id":"fq1_to_salmon", "from":"fq1", "to":"salmon:__FQ1_IN__" },
+    { "id":"fq2_to_salmon", "from":"fq2", "to":"salmon:__FQ2_IN__" },
     { "id":"salmon_to_salmon_quant", "from":"salmon", "to":"salmon_quant"},
     { "id":"salmon_quant_to_cp_salmon_quant", "from":"salmon_quant", "to":"cp_salmon_quant:__SRC_SALMON_QUANT_IN__"}
 ]
