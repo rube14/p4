@@ -66,7 +66,7 @@
                             }
     },
     {
-        "id":"sjdb_annotation_val",
+        "id":"annotation_val",
         "subst_constructor":{
                                 "vals":[ {"subst":"reposdir"}, "/transcriptomes/", {"subst":"transcriptome_subpath"} ],
                                 "postproc":{"op":"concat","pad":""}
@@ -76,7 +76,7 @@
         "id":"sjdb_annotation_flag",
         "required":"no",
         "subst_constructor":{
-                                "vals":[ "--sjdbGTFfile", {"subst":"sjdb_annotation_val"} ],
+                                "vals":[ "--sjdbGTFfile", {"subst":"annotation_val"} ],
                                 "postproc":{"op":"concat","pad":" "}
                             }
     },
@@ -220,6 +220,14 @@
                                 "vals":[ {"subst":"reposdir"}, "/transcriptomes/", {"subst":"transcriptome_subpath"} ],
                                 "postproc":{"op":"concat","pad":""}
                             }
+    },
+    {
+        "id":"gene_mapping_flag",
+        "required":"no",
+        "subst_constructor":{
+                                "vals":[ "--geneMap=", {"subst":"annotation_val"} ],
+                                "postproc":{"op":"concat","pad":""}
+                            }
     }
 ],
 "nodes":[
@@ -352,6 +360,7 @@
                 "--libType", "A",
                 "--mates1", "__FQ1_IN__",
                 "--mates2", "__FQ2_IN__",
+                {"subst":"gene_mapping_flag"},
                 {"subst":"b2c_mt", "ifnull":{"subst_constructor":{ "vals":[ "-p", {"subst":"b2c_mt_val"} ]}}},
                 "--output", {"subst":"salmon_out"}
         ]
