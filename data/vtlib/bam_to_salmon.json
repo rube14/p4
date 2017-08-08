@@ -1,0 +1,225 @@
+{
+"description":"run salmon to quantify input using supplied reference genome, transcriptome and annotation",
+"version":"1.0",
+"subst_params":[
+    {
+        "id":"basic_pipeline_params_file",
+        "required":"yes",
+        "subst_constructor":{
+                                "vals":[ {"subst":"cfgdatadir"}, "/", "alignment_common.json" ],
+                                "postproc":{"op":"concat", "pad":""}
+                            }
+    },
+    {
+        "id": "basic_pipeline_params",
+        "type":"SPFILE",
+        "name":{"subst":"basic_pipeline_params_file"},
+        "required": "no",
+        "comment":"this will expand to a set of subst_param elements"
+    },
+    {
+        "id":"src_input_ext",
+        "default":"cram"
+    },
+    {
+        "id":"src_bam",
+        "required":"yes",
+        "subst_constructor":{
+                                "vals":[ {"subst":"indatadir"}, "/", {"subst":"rpt"}, ".", {"subst":"src_input_ext"} ],
+                                "postproc":{"op":"concat", "pad":""}
+                            }
+    },
+    { "id":"src_input_format",
+      "default":"cram"
+    },
+    {
+        "id":"src_input_format_flag",
+        "subst_constructor":{
+                              "vals":[ "inputformat", {"subst":"src_input_format"} ],
+                                "postproc":{"op":"concat", "pad":"="}
+                            }
+    },
+    {
+        "id":"fastq1_name",
+        "required":"no",
+        "default":"intfile_1.fq.gz",
+        "subst_constructor":{
+                                "vals":[ "intfile_1_", {"subst":"rpt"}, ".fq.gz" ],
+                                "postproc":{"op":"concat", "pad":""}
+                            }
+    },
+    {
+        "id":"fastq1",
+        "required":"yes",
+        "subst_constructor":{
+                                "vals":[ {"subst":"tmpdir"}, "/", {"subst":"fastq1_name"} ],
+                                "postproc":{"op":"concat", "pad":""}
+                            }
+    },
+    {
+        "id":"fastq2_name",
+        "required":"no",
+        "default":"intfile_2.fq.gz",
+        "subst_constructor":{
+                                "vals":[ "intfile_2_", {"subst":"rpt"}, ".fq.gz" ],
+                                "postproc":{"op":"concat", "pad":""}
+                            }
+    },
+    {
+        "id":"fastq2",
+        "required":"yes",
+        "subst_constructor":{
+                                "vals":[ {"subst":"tmpdir"}, "/", {"subst":"fastq2_name"} ],
+                                "postproc":{"op":"concat", "pad":""}
+                            }
+    },
+    {
+        "id":"annotation_val",
+        "subst_constructor":{
+                                "vals":[ {"subst":"reposdir"}, "/transcriptomes/", {"subst":"transcriptome_subpath"} ],
+                                "postproc":{"op":"concat","pad":""}
+                            }
+    },
+    {
+        "id":"aligner_numthreads_flag",
+        "required":"no",
+        "subst_constructor":{
+                                "vals":[ "--runThreadN", {"subst":"aligner_numthreads"} ],
+                                "postproc":{"op":"concat","pad":" "}
+                            }
+    },
+    {
+        "id":"salmon_dir",
+        "required":"no",
+        "default":"salmon_quant"
+    },
+    {
+        "id":"salmon_out",
+        "required":"no",
+        "subst_constructor":{
+                                "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"} ],
+                                "postproc":{"op":"concat","pad":""}
+                            }
+    },
+    {
+        "id":"salmon_quant",
+        "required":"no",
+        "subst_constructor":{ "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"}, "/quant.sf" ], "postproc":{"op":"concat","pad":""} },
+        "default":"salmon_quant/quant.sf"
+    },
+    {
+        "id":"salmon_quant_genes",
+        "required":"no",
+        "subst_constructor":{ "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"}, "/quant.genes.sf" ], "postproc":{"op":"concat","pad":""} },
+        "default":"salmon_quant/quant.genes.sf"
+    },
+    {
+        "id":"salmon_lib_format_counts",
+        "required":"no",
+        "subst_constructor":{ "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"}, "/lib_format_counts.json" ], "postproc":{"op":"concat","pad":""} },
+        "default":"salmon_quant/lib_format_counts.json"
+    },
+    {
+        "id":"salmon_libparams",
+        "required":"no",
+        "subst_constructor":{ "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"}, "/libParams" ], "postproc":{"op":"concat","pad":""} },
+        "default":"salmon_quant/libParams"
+    },
+    {
+        "id":"salmon_cmd_info",
+        "required":"no",
+        "subst_constructor":{ "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"}, "/cmd_info.json" ], "postproc":{"op":"concat","pad":""} },
+        "default":"salmon_quant/cmd_info.json"
+    },
+    {
+        "id":"zip_salmon_quant_target",
+        "required":"no",
+        "subst_constructor":{ "vals":[ {"subst":"outdatadir"}, "/", {"subst":"rpt"}, ".salmon_quant.zip" ], "postproc":{"op":"concat","pad":""} }
+    },
+    {
+        "id":"transcriptome_subpath",
+        "required":"no"
+    },
+    {
+        "id":"transcriptome_val",
+        "subst_constructor":{
+                                "vals":[ {"subst":"reposdir"}, "/transcriptomes/", {"subst":"transcriptome_subpath"} ],
+                                "postproc":{"op":"concat","pad":""}
+                            }
+    },
+    {
+        "id":"gene_mapping_flag",
+        "required":"no",
+        "subst_constructor":{
+                                "vals":[ "--geneMap=", {"subst":"annotation_val"} ],
+                                "postproc":{"op":"concat","pad":""}
+                            }
+    }
+],
+"nodes":[
+    {
+        "id":"src_bam",
+        "type":"INFILE",
+        "name":{"subst":"src_bam"},
+        "description":"BAM using as input to this pipeline - expected to already contain PhiX (normally from hyb buffer spike-in) alignments"
+    },
+    {
+        "id":"bamtofastq",
+        "type":"EXEC",
+        "use_STDIN": true,
+        "use_STDOUT": true,
+        "cmd":["bamtofastq", {"subst":"src_input_format_flag"}, "gz=0", "F=__FQ1_OUT__", "F2=__FQ2_OUT__"]
+    },
+    {
+        "id":"fq1",
+        "type":"RAFILE",
+        "name":{"subst":"fastq1"}
+    },
+    {
+        "id":"fq2",
+        "type":"RAFILE",
+        "name":{"subst":"fastq2"}
+    },
+    {
+        "id":"salmon",
+        "type":"EXEC",
+        "use_STDIN": false,
+        "use_STDOUT": true,
+        "cmd":[
+                "salmon",
+                "--no-version-check",
+                "quant",
+                "--index", {"subst":"transcriptome_val"},
+                "--libType", "A",
+                "--mates1", "__FQ1_IN__",
+                "--mates2", "__FQ2_IN__",
+                {"subst":"gene_mapping_flag"},
+                {"subst":"b2c_mt", "ifnull":{"subst_constructor":{ "vals":[ "-p", {"subst":"b2c_mt_val"} ]}}},
+                "--output", {"subst":"salmon_out"}
+        ]
+    },
+    {
+        "id":"zip_salmon_quant",
+        "type":"EXEC",
+        "use_STDIN": true,
+        "use_STDOUT": false,
+        "cmd":[ 
+                "zip", "-r",
+                {"subst":"zip_salmon_quant_target"},
+                {"subst":"salmon_quant"},
+                {"subst":"salmon_quant_genes"},
+                {"subst":"salmon_lib_format_counts"},
+                {"subst":"salmon_libparams"},
+                {"subst":"salmon_cmd_info"}
+              ]
+    }
+],
+"edges":[
+    { "id":"src_bam_to_bamtofastq", "from":"src_bam", "to":"bamtofastq" },
+    { "id":"bamtofastq_to_fq1", "from":"bamtofastq:__FQ1_OUT__", "to":"fq1" },
+    { "id":"bamtofastq_to_fq2", "from":"bamtofastq:__FQ2_OUT__", "to":"fq2" },
+    { "id":"fq1_to_salmon", "from":"fq1", "to":"salmon:__FQ1_IN__" },
+    { "id":"fq2_to_salmon", "from":"fq2", "to":"salmon:__FQ2_IN__" },
+    { "id":"salmon_to_zip_salmon_quant", "from":"salmon", "to":"zip_salmon_quant"}
+]
+}
