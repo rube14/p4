@@ -96,10 +96,7 @@
     {
         "id":"salmon_out",
         "required":"no",
-        "subst_constructor":{
-                                "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"} ],
-                                "postproc":{"op":"concat","pad":""}
-                            }
+        "subst_constructor":{ "vals":[ {"subst":"salmon_dir"}, "_", {"subst":"rpt"} ], "postproc":{"op":"concat","pad":""} }
     },
     {
         "id":"salmon_quant",
